@@ -1,0 +1,32 @@
+note over browser:
+User enters an input and clicks
+the submit button
+end note
+
+note over browser:
+The default handling of form
+submit is prevented
+end note
+
+note over browser:
+A new note object is created
+with the input and date, then
+added to the notes list
+end note
+
+note over browser:
+Notes list is rerendered
+on the page
+end note
+
+note over browser:
+The new note object is sent
+to the server as JSON-string
+end note
+
+browser->server: HTTP POST https://studies.cs.helsinki.fi/exampleapp/new_note_spa
+
+note over server:
+Server adds the note to
+its array of notes
+end note

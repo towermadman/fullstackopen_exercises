@@ -1,0 +1,19 @@
+note over browser:
+User enters an input and clicks
+the submit button
+end note
+
+note over browser:
+The request body contains the
+input for 'note'
+end note
+
+browser->server: HTTP POST https://studies.cs.helsinki.fi/exampleapp/new_note
+
+note over server:
+Server adds the input and date
+to an array of notes
+end note
+
+server-->browser: Redirect browser back to /notes
+browser->server: HTTP GET https://studies.cs.helsinki.fi/exampleapp/notes
