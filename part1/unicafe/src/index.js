@@ -43,25 +43,34 @@ const App = () => {
 	const [positive, setPositive] = useState(0)
 
 	const goodButton = () => {
-		setGood(good + 1)
-		setAll(all + 1)
+		const newGood = good + 1
+		setGood(newGood)
+		
+		const newAll = all + 1
+		setAll(newAll)
 
-		setAverage((good - bad + 1) / (all + 1))
-		setPositive((good + 1) / (all + 1))
+		setAverage((newGood - bad) / newAll)
+		setPositive(newGood / newAll)
 	}
 	const neutralButton = () => {
-		setNeutral(neutral + 1)
-		setAll(all + 1)
+		const newNeutral = neutral + 1
+		setNeutral(newNeutral)
+		
+		const newAll = all + 1
+		setAll(newAll)
 
-		setAverage((good - bad) / (all + 1))
-		setPositive(good / (all + 1))
+		setAverage((good - bad) / newAll)
+		setPositive(good / newAll)
 	}
 	const badButton = () => {
-		setBad(bad + 1)
-		setAll(all + 1)
+		const newBad = bad + 1
+		setBad(newBad)
 
-		setAverage((good - bad - 1) / (all + 1))
-		setPositive(good / (all + 1))
+		const newAll = all + 1
+		setAll(newAll)
+
+		setAverage((good - newBad) / newAll)
+		setPositive(good / newAll)
 	}
 
 	return (
