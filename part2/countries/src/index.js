@@ -10,6 +10,38 @@ const Search = ({ value, onChange }) => (
 	</div>
 )
 
+const Weather = ({ country }) => {
+	const [weather, setWeather] = useState('')
+
+	useEffect(() => {
+		const api_key = process.env.REACT_APP_API_KEY
+
+		axios
+			.get(`http://api.weatherstack.com/current
+				?access_key=${api_key}
+				&query=${country.name}`
+			)
+			.then(response => {
+				if (!response.data.current) {
+					setWeather('')
+					return
+				}
+
+				const weatherResults = response.data.current
+				setWeather(weatherResults)
+			})
+	}, [country.name])
+
+	return (
+		<div>
+			<h2>Weather in {country.capital}</h2>
+			<h3>temperature: {weather.temperature}</h3>
+			<img src={weather.weather_icons}></img>
+			<h3>wind: {weather.wind_speed}</h3>
+		</div>
+	)
+}
+
 const Country = ({ country }) => {
 	if (!country) return false
 
@@ -18,6 +50,7 @@ const Country = ({ country }) => {
 			<h1>{country.name}</h1>
 			<p>Capital: {country.capital}</p>
 			<p>Population: {country.population}</p>
+
 			<h2>Languages</h2>
 			<ul>
 				{country.languages.map(language =>
@@ -25,6 +58,8 @@ const Country = ({ country }) => {
 				)}
 			</ul>
 			<img src={country.flag}></img>
+
+			<Weather country={country} />
 		</div>
 	)
 }
@@ -77,10 +112,7 @@ const App = () => {
 		axios
 			.get('https://restcountries.eu/rest/v2/all')
 			.then(response => {
-				const countryResults = response.data.filter(country =>
-					country.name.toUpperCase()
-					.includes(searchQuery.toUpperCase())
-				)
+				const countryResults = response.data
 				setCountries(countryResults)
 			})
 	}, [])
