@@ -10,22 +10,26 @@ const Search = ({ value, onChange }) => (
 	</div>
 )
 
-const Country = ({ country }) => (
-	<div>
-		<h1>{country.name}</h1>
-		<p>Capital: {country.capital}</p>
-		<p>Population: {country.population}</p>
-		<h2>Languages</h2>
-		<ul>
-			{country.languages.map(language =>
-				<li key={language.name}>{language.name}</li>
-			)}
-		</ul>
-		<img src={country.flag}></img>
-	</div>
-)
+const Country = ({ country }) => {
+	if (!country) return false
 
-const Display = ({ countries }) => {
+	return (
+		<div>
+			<h1>{country.name}</h1>
+			<p>Capital: {country.capital}</p>
+			<p>Population: {country.population}</p>
+			<h2>Languages</h2>
+			<ul>
+				{country.languages.map(language =>
+					<li key={language.name}>{language.name}</li>
+				)}
+			</ul>
+			<img src={country.flag}></img>
+		</div>
+	)
+}
+
+const List = ({ countries, onClick }) => {
 	if (!countries.length) {
 		return <p>No matches</p>
 
@@ -33,10 +37,34 @@ const Display = ({ countries }) => {
 		return <p>Too many matches, specify another filter</p>
 
 	} else if (countries.length > 1) {
-		return <div>{countries.map(country => <p key={country.name}>{country.name}</p>)}</div>
+		return (
+			<div>
+				{countries.map(country => (
+					<p key={country.name}>
+						{country.name}
+						<button type="button" onClick={() => onClick(country)}>show</button>
+					</p>
+				))}
+			</div>
+		)
 	}
 
-	return <Country country={countries[0]} />
+	return false
+}
+
+const Display = ({ countries }) => {
+	const [country, setCountry] = useState('')
+
+	const clickHandler = (country) => setCountry(country)
+
+	if (countries.length === 1 && country != countries[0]) setCountry(countries[0])
+
+	return (
+		<>
+			<List countries={countries} onClick={clickHandler} />
+			<Country country={country} />
+		</>
+	)
 }
 
 const App = () => {
