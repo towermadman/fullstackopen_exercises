@@ -1,75 +1,9 @@
 import { useState, useEffect } from 'react'
 import personServices from './services/persons'
-
-const Notification = ({ notification }) => {
-	if (notification === null) return null
-
-	const successStyle = {
-		color: 'green',
-		fontSize: 20,
-		background: 'lightgrey',
-		borderStyle: 'solid',
-		borderRadius: 5,
-		padding: 10,
-		marginBottom: 10
-	}
-
-	const failureStyle = {
-		color: 'red',
-		fontSize: 20,
-		background: 'lightgrey',
-		borderStyle: 'solid',
-		borderRadius: 5,
-		padding: 10,
-		marginBottom: 10
-	}
-
-	return (
-		<div style={notification.success ? successStyle : failureStyle}>
-			{notification.message}
-		</div>
-	)
-}
-
-const Filter = ({ value, onChange }) => (
-	<div>
-		filter shown with <input
-		value={value}
-		onChange={onChange} />
-	</div>
-)
-
-const PersonForm = (props) => (
-	<form onSubmit={props.addPerson}>
-		<div>
-			name: <input
-			value={props.newName}
-			onChange={props.handleNameChange} />
-		</div>
-		<div>
-			number: <input
-			value={props.newNumber}
-			onChange={props.handleNumberChange} />
-		</div>
-		<div>
-			<button type="submit">add</button>
-		</div>
-	</form>
-)
-
-const Person = ({ person, deletePerson }) => (
-	<div>
-		<p>{person.name} {person.number}
-			<button type="button" onClick={() => deletePerson(person.id, person.name)}>delete</button>
-		</p>
-	</div>
-)
-
-const Persons = ({ persons, deletePerson }) => (
-	persons.map(person =>
-		<Person key={person.id} person={person} deletePerson={deletePerson} />
-	)
-)
+import Notification from './components/Notification'
+import Filter from './components/Filter'
+import PersonForm from './components/PersonForm'
+import Persons from './components/Persons'
 
 const App = () => {
 	const [ persons, setPersons ] = useState([])
@@ -100,43 +34,36 @@ const App = () => {
 		}, 5000)
 	}
 
-	const addPerson = (event) => {
-		event.preventDefault()
-		const personObject = {
-			name: newName,
-			number: newNumber
-		}
+	const updatePerson = (personObject, currentPerson) => {
+		if (!window.confirm(
+			`${newName} is already added to phonebook, replace the old number with a new one?`
+		)) return
 
-		const currentPerson = persons.find(person => person.name === newName)
-		if (currentPerson) {
-			if (!window.confirm(
-				`${newName} is already added to phonebook, replace the old number with a new one?`
-			)) return
-			
-			return personServices
-				.update(personObject, currentPerson.id)
-				.then(returnedPerson => {
-					setPersons(persons.map(person =>
-						person.id !== returnedPerson.id ? person : returnedPerson
-					))
-					setNewName('')
-					setNewNumber('')
+		personServices
+			.update(personObject, currentPerson.id)
+			.then(returnedPerson => {
+				setPersons(persons.map(person =>
+					person.id !== returnedPerson.id ? person : returnedPerson
+				))
+				setNewName('')
+				setNewNumber('')
 
-					showNotification({
-						message: `Updated ${returnedPerson.name}`,
-						success: true
-					})
+				showNotification({
+					message: `Updated ${returnedPerson.name}`,
+					success: true
 				})
-				.catch(error => {
-					showNotification({
-						message: `Information of ${newName} has already been removed from server`,
-						success: false
-					})
-
-					setPersons(persons.filter(person => person.id !== currentPerson.id))
+			})
+			.catch(error => {
+				showNotification({
+					message: `Information of ${newName} has already been removed from server`,
+					success: false
 				})
-		}
 
+				setPersons(persons.filter(person => person.id !== currentPerson.id))
+			})
+	}
+
+	const createPerson = (personObject) => {
 		personServices
 			.create(personObject)
 			.then(returnedPerson => {
@@ -149,6 +76,22 @@ const App = () => {
 					success: true
 				})
 			})
+	}
+
+	const addPerson = (event) => {
+		event.preventDefault()
+
+		const personObject = {
+			name: newName,
+			number: newNumber
+		}
+
+		const currentPerson = persons.find(person => person.name === newName)
+		if (currentPerson) {
+			updatePerson(personObject, currentPerson)
+		} else {
+			createPerson(personObject)
+		}
 	}
 
 	const deletePerson = (id, name) => {
