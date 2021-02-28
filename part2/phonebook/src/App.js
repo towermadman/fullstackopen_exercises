@@ -76,6 +76,13 @@ const App = () => {
 					success: true
 				})
 			})
+			.catch(error => {
+				console.log(error.response.data.error)
+				showNotification({
+					message: error.response.data.error,
+					success: false
+				})
+			})
 	}
 
 	const addPerson = (event) => {
