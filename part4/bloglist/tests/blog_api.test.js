@@ -4,15 +4,9 @@ const helper = require('./test_helper')
 const app = require('../app')
 const api = supertest(app)
 
-const Blog = require('../models/blog')
-
 beforeEach(async () => {
-	await Blog.deleteMany({})
-
-	for (let blog of helper.initialBlogs) {
-		let blogObject = new Blog(blog)
-		await blogObject.save()
-	}
+	await helper.loadBlogDb()
+	await helper.loadUserDb()
 })
 
 describe('when there is initially some blogs saved', () => {
@@ -33,8 +27,16 @@ describe('when there is initially some blogs saved', () => {
 	})
 })
 
-describe('addition of a new blog', () => {
-	test('a valid blog post can be added', async () => {
+describe('Addition of a new blog', () => {
+	test('if logged in, a valid blog post can be added', async () => {
+		const user = await api
+			.post('/api/login')
+			.send({
+				username: helper.initialUsers[0].username,
+				password: helper.initialUsers[0].password
+			})
+			.expect(200)
+
 		const newBlog = {
 			title: "Extremely Offensive Blog Titles and Why You're a Jerk",
 			author: "J.J. Squidworth",
@@ -44,6 +46,7 @@ describe('addition of a new blog', () => {
 
 		await api
 			.post('/api/blogs')
+			.set('Authorization', `bearer ${user.body.token}`)
 			.send(newBlog)
 			.expect(201)
 			.expect('Content-Type', /application\/json/)
@@ -56,10 +59,32 @@ describe('addition of a new blog', () => {
 			newBlog.title
 		)
 	})
+
+	test('if no token provided, fails with status code 401 Unauthorized', async () => {
+		const newBlog = {
+			title: "Extremely Offensive Blog Titles and Why You're a Jerk",
+			author: "J.J. Squidworth",
+			url: "www.clickhereyoujerk.com",
+			likes: 500
+		}
+
+		await api
+			.post('/api/blogs')
+			.send(newBlog)
+			.expect(401)
+	})
 })
 
 describe('addition of blog post with missing properties', () => {
 	test('likes defaults to 0 and succeeds with status code 201', async () => {
+		const user = await api
+			.post('/api/login')
+			.send({
+				username: helper.initialUsers[0].username,
+				password: helper.initialUsers[0].password
+			})
+			.expect(200)
+
 		const newBlog = {
 			title: "Extremely Offensive Blog Titles and Why You're a Jerk",
 			author: "J.J. Squidworth",
@@ -68,6 +93,7 @@ describe('addition of blog post with missing properties', () => {
 
 		const response = await api
 			.post('/api/blogs')
+			.set('Authorization', `bearer ${user.body.token}`)
 			.send(newBlog)
 			.expect(201)
 			.expect('Content-Type', /application\/json/)
@@ -76,6 +102,14 @@ describe('addition of blog post with missing properties', () => {
 	})
 
 	test('title and url fails with status code 400', async () => {
+		const user = await api
+			.post('/api/login')
+			.send({
+				username: helper.initialUsers[0].username,
+				password: helper.initialUsers[0].password
+			})
+			.expect(200)
+
 		const newBlog = {
 			author: "J.J. Squidworth",
 			likes: 500
@@ -83,54 +117,63 @@ describe('addition of blog post with missing properties', () => {
 
 		await api
 			.post('/api/blogs')
+			.set('Authorization', `bearer ${user.body.token}`)
 			.send(newBlog)
 			.expect(400)
 	})
 })
 
-describe('deletion of a blog', () => {
-	test('succeeds with status code 204 if id is valid', async () => {
-		const blogsAtStart = await helper.blogsInDb()
-		const blogToDelete = blogsAtStart[0]
-
-		await api
-			.delete(`/api/blogs/${blogToDelete.id}`)
-			.expect(204)
-
-		const blogsAtEnd = await helper.blogsInDb()
-
-		expect(blogsAtEnd).toHaveLength(
-			helper.initialBlogs.length - 1
-		)
-
-		const titles = blogsAtEnd.map(r => r.title)
-
-		expect(titles).not.toContain(blogToDelete.title)
-	})
-})
-
-describe('updating a blog', () => {
-	test('suceeds with status code 200', async () => {
-		const blogsAtStart = await helper.blogsInDb()
-		const blogToUpdate = blogsAtStart[0]
-
-		const updatedBlog = {
-			title: "Extremely Offensive Blog Titles and Why You're a Jerk",
-			author: "J.J. Squidworth",
-			url: "www.clickhereyoujerk.com",
-			likes: 500
+describe('addition of an invalid user', () => {
+	test('fails with status code 400 when username length is 2', async () => {
+		const invalidUser = {
+			username: 'Jo',
+			name: 'Joe',
+			password: 'goodpassword'
 		}
 
-		await api
-			.put(`/api/blogs/${blogToUpdate.id}`)
-			.send(updatedBlog)
-			.expect(200)
+		const response = await api
+			.post('/api/users/')
+			.send(invalidUser)
+			.expect(400)
 
-		const blogsAtEnd = await helper.blogsInDb()
+		expect(response.body.error).toContain(
+			'User validation failed'
+		)
+	})
 
-		const titles = blogsAtEnd.map(b => b.title)
-		expect(titles).toContain(
-			updatedBlog.title
+	test('fails with status code 400 when password length is 2', async () => {
+		const invalidUser = {
+			username: 'Joe',
+			name: 'Joe',
+			password: 'pw'
+		}
+
+		const response = await api
+			.post('/api/users/')
+			.send(invalidUser)
+			.expect(400)
+
+		expect(response.body.error).toContain(
+			'Password must be at least 3 characters'
+		)
+	})
+
+	test('fails with status code 400 when username is taken', async () => {
+		await helper.loadUserDb()
+
+		const invalidUser = {
+			username: helper.initialUsers[0].username,
+			name: 'Joe',
+			password: 'password'
+		}
+
+		const response = await api
+			.post('/api/users')
+			.send(invalidUser)
+			.expect(400)
+
+		expect(response.body.error).toContain(
+			'User validation failed'
 		)
 	})
 })
