@@ -1,0 +1,19 @@
+.error {
+	color: rgb(255, 132, 132);
+	background: rgb(144, 70, 70);
+	font-size: 20px;
+	border-style: solid;
+	border-radius: 5px;
+	padding: 10px;
+	margin-bottom: 10px;
+}
+
+.success {
+	color: rgb(136, 221, 136);
+	background: rgb(52, 112, 72);
+	font-size: 20px;
+	border-style: solid;
+	border-radius: 5px;
+	padding: 10px;
+	margin-bottom: 10px;
+}
