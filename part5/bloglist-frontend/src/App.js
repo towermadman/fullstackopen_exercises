@@ -22,6 +22,15 @@ const App = () => {
 		)
 	}, [])
 
+	useEffect(() => {
+		const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser')
+		if (loggedUserJSON) {
+			const user = JSON.parse(loggedUserJSON)
+			setUser(user)
+			blogService.setToken(user.token)
+		}
+	}, [])
+
 	const handleLogin = async (event) => {
 		event.preventDefault()
 		try {
@@ -89,7 +98,7 @@ const App = () => {
 		}
 	}
 
-	const notifyWith = (message, type = 'success') => {
+	const notifyWith = (message, type='success') => {
 		setNotification({ message, type })
 		setTimeout(() => {
 			setNotification(null)
@@ -123,7 +132,7 @@ const App = () => {
 					</Togglable>
 
 					{blogs
-						.sort((blogA, blogB) => blogA.likes > blogB.likes)
+						.sort((blogA, blogB) => blogA.likes < blogB.likes)
 						.map(blog =>
 							<Blog
 								key={blog.id}
